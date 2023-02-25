@@ -1,0 +1,17 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nodelabels
+  labels:
+    env: development
+spec:
+  containers:
+    - name: container1
+      image: ubuntu
+      command:
+        - /bin/bash
+        - -c
+        - while true; do echo Hello-Rishi; sleep 5 ; done
+  nodeSelector:
+    hardware: t2-medium
