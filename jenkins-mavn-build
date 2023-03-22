@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Docker Install') {
+            steps {
+                sh ''' sudo yum update -y && sudo yum install docker -y
+                 '''
+                
+            }    
+            
+        }
+    
+        stage ('Build in container') {
+            steps {
+                sh ''' cat  << EOF >  dockerfile 
+FROM ubuntu 
+RUN apt-get update && apt-get install openjdk-11-jdk -y && apt-get install maven -y && apt-get install git -y
+RUN git clone https://github.com/atulyw/student-ui.git
+RUN cd student-ui && mvn clean package
+
+EOF
+           sudo docker build -t cat-repo .
+           '''
+            }
+            
+        }
+        stage('Verify In ECR') {
+            steps {
+                sh ''' aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 611469114477.dkr.ecr.ap-southeast-1.amazonaws.com
+                   '''
+            } 
+        }
+
+    
+        stage('Tag To  Image') {
+            steps {
+                sh ''' docker tag cat-repo:latest 611469114477.dkr.ecr.ap-southeast-1.amazonaws.com/cat-repo:latest
+                   '''
+            } 
+        }
+
+    
+        stage('Push To ECR') {
+            steps {
+                sh ''' docker push 611469114477.dkr.ecr.ap-southeast-1.amazonaws.com/cat-repo:latest
+                   '''
+            } 
+        }
+
+    }
+}
+    
+        
+
+
+
